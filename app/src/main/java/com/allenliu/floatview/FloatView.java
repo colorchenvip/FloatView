@@ -1,23 +1,15 @@
 package com.allenliu.floatview;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.net.Uri;
 import android.os.Build;
-import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.Toast;
-
-import org.json.JSONObject;
 
 
 public class FloatView extends LinearLayout {
@@ -28,6 +20,9 @@ public class FloatView extends LinearLayout {
     private float mTouchStartY;
     private float x;
     private float y;
+
+    private int mScreenWidth;
+    private int mScreenHeight;
     private IFloatViewClick listener;
     private boolean isAllowTouch=true;
     public FloatView(Context context, int x, int y, int layoutres) {
@@ -46,6 +41,15 @@ public class FloatView extends LinearLayout {
     private void init(View childView, int x, int y) {
         wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         wmParams = new WindowManager.LayoutParams();
+
+        // 更新浮动窗口位置参数 靠边
+        DisplayMetrics dm = new DisplayMetrics();
+        // 获取屏幕信息
+        wm.getDefaultDisplay().getMetrics(dm);
+        mScreenWidth = dm.widthPixels;
+        mScreenHeight = dm.heightPixels;
+        this.wmParams = new WindowManager.LayoutParams();
+
         //设置你要添加控件的类型，TYPE_ALERT需要申明权限，TOast不需要，在某些定制系统中会禁止悬浮框显示，所以最后用TYPE_TOAST
         wmParams.type = WindowManager.LayoutParams.TYPE_TOAST;
         //设置控件在坐标计算规则，相当于屏幕左上角
@@ -170,6 +174,14 @@ public class FloatView extends LinearLayout {
             case MotionEvent.ACTION_UP:
                 y = (int) event.getRawY() - this.getMeasuredHeight() / 2 - 25;
                 x = (int) event.getRawX() - this.getMeasuredWidth() / 2;
+
+                if (wmParams.x >= mScreenWidth / 2) {
+                    wmParams.x = mScreenWidth;
+                } else if (wmParams.x < mScreenWidth / 2) {
+                    wmParams.x = 0;
+                }
+
+
                 if (Math.abs(y - mTouchStartY) > 10 || Math.abs(x - mTouchStartX) > 10) {
                     wm.updateViewLayout(this, wmParams);
                 } else {
